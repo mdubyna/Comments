@@ -5,7 +5,8 @@ from djangochannelsrestframework import permissions
 
 
 class IsAuthenticatedForWrite(permissions.IsAuthenticated):
-    """Custom authentication class to allow access fpr write only to Authenticated Users"""
+    """Custom authentication class
+    to allow access fpr write only to Authenticated Users"""
     async def has_permission(
             self, scope: Dict[str, Any],
             consumer: AsyncConsumer,

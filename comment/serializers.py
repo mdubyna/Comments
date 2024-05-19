@@ -37,12 +37,16 @@ class CommentSerializer(serializers.ModelSerializer):
         scope = self.context.get("scope")
 
         if not scope:
-            raise serializers.ValidationError("Captcha validation failed: no scope in context.")
+            raise serializers.ValidationError(
+                "Captcha validation failed: no scope in context."
+            )
 
-        session = scope.get('session')
+        session = scope.get("session")
 
         if not session:
-            raise serializers.ValidationError("Captcha validation failed: no session in scope.")
+            raise serializers.ValidationError(
+                "Captcha validation failed: no session in scope."
+            )
 
         captcha_text = session.get("captcha_text")
 

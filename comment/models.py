@@ -12,7 +12,8 @@ from comment.validators import file_size
 
 def comment_media_path(instance: "Comment", filename: str) -> pathlib.Path:
     """Path for media file to be uploaded"""
-    filename = f"{slugify(filename)}-{uuid.uuid4()}" + pathlib.Path(filename).suffix
+    filename = (f"{slugify(filename)}-{uuid.uuid4()}"
+                + pathlib.Path(filename).suffix)
     return pathlib.Path(filename)
 
 

@@ -26,7 +26,11 @@ logging.basicConfig(
 )
 
 
-class CommentConsumer(mixins.ListModelMixin, mixins.CreateModelMixin, GenericAsyncAPIConsumer):
+class CommentConsumer(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    GenericAsyncAPIConsumer
+):
     """Comment consumer for handling web socket connections."""
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
@@ -59,7 +63,9 @@ class CommentConsumer(mixins.ListModelMixin, mixins.CreateModelMixin, GenericAsy
             **kwargs
     ) -> dict:
         """This will return the comment serializer"""
-        return dict(data=CommentSerializer(instance).data, action=action.value, pk=instance.pk)
+        return dict(data=CommentSerializer(instance).data,
+                    action=action.value,
+                    pk=instance.pk)
 
     @action()
     async def create(self, **kwargs) -> None:
@@ -71,26 +77,42 @@ class CommentConsumer(mixins.ListModelMixin, mixins.CreateModelMixin, GenericAsy
         if image_data:
             format_image, imgstr = image_data.split(";base64,")
             ext = format_image.split("/")[-1]
-            data["image"] = ContentFile(base64.b64decode(imgstr), name=f'{uuid.uuid4()}.{ext}')
+            data["image"] = ContentFile(
+                base64.b64decode(imgstr),
+                name=f"{uuid.uuid4()}.{ext}"
+            )
 
         if file_data:
             format_file, filestr = file_data.split(";base64,")
-            ext = format_file.split('/')[-1]
-            data["file"] = ContentFile(base64.b64decode(filestr), name=f'{uuid.uuid4()}.{ext}')
+            ext = format_file.split("/")[-1]
+            data["file"] = ContentFile(
+                base64.b64decode(filestr),
+                name=f"{uuid.uuid4()}.{ext}"
+            )
 
         await self.load_and_update_session()
 
-        serializer = CommentSerializer(data=data, context={"scope": self.scope})
+        serializer = CommentSerializer(
+            data=data,
+            context={"scope": self.scope}
+        )
 
         if await database_sync_to_async(serializer.is_valid)():
-            comment = await database_sync_to_async(serializer.save)(author=self.scope["user"])
+            comment = await database_sync_to_async(
+                serializer.save
+            )(author=self.scope["user"])
             await self.send_json(CommentSerializer(comment).data)
         else:
             logging.info("Invalid data:", serializer.errors)
-            await self.send_json({"type": "error", "errors": serializer.errors})
+            await self.send_json({
+                "type": "error",
+                "errors": serializer.errors
+            })
 
     async def load_and_update_session(self) -> None:
         """Update actual session"""
-        current_session_data = await sync_to_async(self.scope["session"].load)()
+        current_session_data = await sync_to_async(
+            self.scope["session"].load
+        )()
         await sync_to_async(self.scope["session"].update)(current_session_data)
         await sync_to_async(self.scope["session"].save)()
