@@ -14,6 +14,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -92,6 +93,10 @@ DATABASES = {
         "PORT": os.getenv("POSTGRES_PORT"),
     }
 }
+
+db_from_env = dj_database_url.config(conn_max_age=500)
+
+DATABASES["default"].update(db_from_env)
 
 CHANNEL_LAYERS = {
     "default": {
