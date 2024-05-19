@@ -13,6 +13,7 @@ import os
 
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlparse
 
 import dj_database_url
 from dotenv import load_dotenv
@@ -98,11 +99,20 @@ db_from_env = dj_database_url.config(conn_max_age=500)
 
 DATABASES["default"].update(db_from_env)
 
+if DEBUG:
+    redis_host = "redis"
+    redis_port = 6379
+else:
+    redis_url = os.getenv("REDIS_URL")
+    parsed_redis_url = urlparse(redis_url)
+    redis_host = parsed_redis_url.hostname
+    redis_port = parsed_redis_url.port
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],
+            "hosts": [(redis_host, redis_port)],
         },
     },
 }
