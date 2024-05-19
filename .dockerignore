@@ -10,3 +10,4 @@ docker-compose.yaml
 .github
 .env.sample
 .env
+build
