@@ -371,7 +371,7 @@
         const captchaImage = document.getElementById('captchaImage');
         
         const token = localStorage.getItem('Token');
-        const socket = new WebSocket(`ws://${window.location.host}/ws/comments/?token=${token}`);
+        const socket = new WebSocket(`wss://${window.location.host}/ws/comments/?token=${token}`);
         
         socket.onopen = function() {
             socket.send(JSON.stringify({
