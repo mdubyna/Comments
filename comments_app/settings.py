@@ -30,7 +30,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "websocketking.com"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "websocketking.com", "comments-3g0k.onrender.com"]
 
 # Application definition
 
