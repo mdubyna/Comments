@@ -5,7 +5,6 @@ import sys
 
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
-from djangochannelsrestframework import pagination
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from djangochannelsrestframework.observer import model_observer
 from djangochannelsrestframework.decorators import action
@@ -32,10 +31,9 @@ class CommentConsumer(
     GenericAsyncAPIConsumer
 ):
     """Comment consumer for handling web socket connections."""
-    queryset = Comment.objects.all()
+    queryset = Comment.objects.all().order_by('-created_at')
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticatedForWrite,)
-    pagination_class = pagination.WebsocketLimitOffsetPagination
 
     @action()
     async def subscribe_to_comment_activity(
