@@ -99,24 +99,6 @@ db_from_env = dj_database_url.config(conn_max_age=500)
 
 DATABASES["default"].update(db_from_env)
 
-# if DEBUG:
-#     redis_host = "redis"
-#     redis_port = 6379
-#     hosts = [(redis_host, redis_port)]
-# else:
-#     # redis_url = os.getenv("REDIS_URL")
-#     redis_host = "redis://red-cp545mq1hbls73f9s4qg:6379"
-#     hosts = [redis_host]
-#
-# CHANNEL_LAYERS = {
-#     "default": {
-#         "BACKEND": "channels_redis.core.RedisChannelLayer",
-#         "CONFIG": {
-#             "hosts": hosts,
-#         },
-#     },
-# }
-
 if DEBUG:
     redis_host = "redis"
     redis_port = 6379
@@ -167,12 +149,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = "staticfiles/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
-if not DEBUG:
-    STATIC_ROOT = os.path.join(BASE_DIR, "static")
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
