@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Comments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #comments {
+            margin-top: 20px;
+        }
+
+        .comment {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .comment p {
+            margin: 0;
+        }
+
+        .comment .meta {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .comment img {
+            max-width: 100%;
+            margin-top: 10px;
+        }
+
+        .replies {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .reply-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .reply-button:hover {
+            background-color: #0056b3;
+        }
+
+        #commentForm {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #commentForm textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #commentForm input[type="file"] {
+            margin-top: 10px;
+        }
+
+        #commentForm button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #commentForm button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>Comments</h1>
+    <div id="comments">
+    </div>
+
+    <form id="commentForm">
+        <textarea id="commentText" placeholder="Add a comment..."></textarea><br>
+        <input type="file" id="commentImage" accept="image/*"><br>
+        <input type="file" id="commentFile" accept=".txt"><br>
+        <input type="hidden" id="parentCommentId" value=""><br>
+        <input type="text" id="captchaInput" placeholder="Enter the text from the image"><br>
+        <img id="captchaImage" alt="Captcha Image"><br>
+        <button type="button" onclick="reloadCaptcha()">Reload Captcha</button><br>
+        <button type="submit">Submit</button>
+    </form>
+    
+    <script>
+        const commentsDiv = document.getElementById('comments');
+        const commentForm = document.getElementById('commentForm');
+        const commentText = document.getElementById('commentText');
+        const commentImage = document.getElementById('commentImage');
+        const commentFile = document.getElementById('commentFile');
+        const parentCommentId = document.getElementById('parentCommentId');
+        const captchaInput = document.getElementById('captchaInput');
+        const captchaImage = document.getElementById('captchaImage');
+        
+        const token = localStorage.getItem('Token');
+        const socket = new WebSocket(`wss://${window.location.host}/ws/comments/?token=${token}`);
+        
+        socket.onopen = function() {
+            socket.send(JSON.stringify({
+                action: 'subscribe_to_comment_activity',
+                request_id: new Date().getTime(),
+            }));
+        
+            socket.send(JSON.stringify({
+                action: 'list',
+                request_id: new Date().getTime(),
+            }));
+        }
+        
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            console.log('RealTime', data);
+        
+            if (data.errors) {
+                Object.keys(data.errors).forEach(field => {
+                    const errorMessage = data.errors[field];
+                    const errorElement = document.createElement('div');
+                    errorElement.innerText = `${field}: ${errorMessage}`;
+                    document.body.appendChild(errorElement);
+                });
+            }
+        
+            if (data.action === 'list' || data.action === 'create') {
+                const comments = data.data;
+                if (Array.isArray(comments)) {
+                    commentsDiv.innerHTML = '';
+                    comments.forEach(comment => {
+                        displayComment(comment);
+                    });
+                } else {
+                    displayComment(comments);
+                }
+            }
+        };
+        
+        function displayComment(comment, parentElement = null) {
+            const commentElement = document.createElement('div');
+            commentElement.className = 'comment';
+            commentElement.innerHTML = `
+                <div class="meta">
+                    <strong>User id: ${comment.author}</strong> - <em>${new Date(comment.created_at).toLocaleString()} Comment id: ${comment.id} Parent comment id: ${comment.parent_post_comment || 'None'}</em>
+                </div>
+                <p>${comment.text}</p>
+            `;
+        
+            if (comment.image) {
+                const img = document.createElement('img');
+                img.src = comment.image;
+                commentElement.appendChild(img);
+            }
+        
+            if (comment.file) {
+                const fileLink = document.createElement('a');
+                fileLink.href = comment.file;
+                fileLink.innerText = 'Download file';
+                commentElement.appendChild(fileLink);
+            }
+        
+            const replyButton = document.createElement('button');
+            replyButton.className = 'reply-button';
+            replyButton.innerText = 'Reply';
+            replyButton.onclick = function() {
+                parentCommentId.value = comment.id;
+                commentText.focus();
+            };
+            commentElement.appendChild(replyButton);
+        
+            const repliesDiv = document.createElement('div');
+            repliesDiv.className = 'replies';
+            commentElement.appendChild(repliesDiv);
+        
+            if (comment.child && comment.child.length > 0) {
+                comment.child.forEach(childComment => {
+                    displayComment(childComment, repliesDiv);
+                });
+            }
+        
+            if (parentElement) {
+                parentElement.appendChild(commentElement);
+            } else {
+                commentsDiv.appendChild(commentElement);
+            }
+        }
+        
+        commentForm.onsubmit = function(e) {
+            e.preventDefault();
+        
+            const text = commentText.value;
+            const image = commentImage.files[0];
+            const file = commentFile.files[0];
+            const parent = parentCommentId.value;
+            const captcha = captchaInput.value;
+        
+            const reader = new FileReader();
+        
+            reader.onload = function() {
+                const imageData = image ? reader.result : null;
+        
+                const reader2 = new FileReader();
+                reader2.onload = function() {
+                    const fileData = file ? reader2.result : null;
+        
+                    const request_id = new Date().getTime();
+        
+                    socket.send(JSON.stringify({
+                        action: 'create',
+                        request_id: request_id,
+                        data: {
+                            text: text,
+                            image: imageData,
+                            file: fileData,
+                            parent_post_comment: parent || null,
+                            captcha: captcha
+                        }
+                    }));
+        
+                    commentText.value = '';
+                    commentImage.value = null;
+                    commentFile.value = null;
+                    parentCommentId.value = '';
+                    captchaInput.value = '';
+                    reloadCaptcha();
+                };
+                if (file) {
+                    reader2.readAsDataURL(file);
+                } else {
+                    reader2.onload();
+                }
+            };
+            if (image) {
+                reader.readAsDataURL(image);
+            } else {
+                reader.onload();
+            }
+        };
+        
+        function reloadCaptcha() {
+            captchaImage.src = `generate_captcha/?t=${new Date().getTime()}`;
+            console.log("captcha reloaded")
+        }
+        
+        // Load initial captcha
+        reloadCaptcha();
+    </script>
+</body>
+</html>
