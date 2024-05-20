@@ -99,17 +99,17 @@ db_from_env = dj_database_url.config(conn_max_age=500)
 
 DATABASES["default"].update(db_from_env)
 
-if DEBUG:
-    redis_host = "redis"
-    redis_port = 6379
-    hosts = [(redis_host, redis_port)]
-else:
-    # redis_url = os.getenv("REDIS_URL")
-    # parsed_redis_url = urlparse(redis_url)
-    # redis_host = parsed_redis_url.hostname
-    # redis_port = parsed_redis_url.port
-    redis_host = "redis://red-cp545mq1hbls73f9s4qg:6379"
-    hosts = [redis_host]
+# if DEBUG:
+#     redis_host = "redis"
+#     redis_port = 6379
+#     hosts = [(redis_host, redis_port)]
+# else:
+#     # redis_url = os.getenv("REDIS_URL")
+#     # parsed_redis_url = urlparse(redis_url)
+#     # redis_host = parsed_redis_url.hostname
+#     # redis_port = parsed_redis_url.port
+redis_host = "redis://red-cp545mq1hbls73f9s4qg:6379"
+hosts = [redis_host]
 
 CHANNEL_LAYERS = {
     "default": {
